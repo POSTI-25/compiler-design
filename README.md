@@ -4,7 +4,7 @@ AEGIS is an academic domain-specific language and compiler project for expressin
 
 ## Current Status
 
-The project foundation, lexer, parser, and AST are implemented. Semantic analysis, the symbol table, IR, optimization, target-code generation, and the Mission VM are not implemented yet.
+The project foundation, lexer, parser, AST, semantic analysis, symbol table, and structured IR are implemented. Optimization, target-code generation, bytecode generation, and the Mission VM are not implemented yet.
 
 ## Planned Pipeline
 
@@ -36,9 +36,11 @@ python -m aegis.cli tokenize examples/valid/observation.aegis
 python -m aegis.cli parse examples/valid/observation.aegis
 # run semantic checks
 python -m aegis.cli check examples/valid/observation.aegis
+# generate structured IR
+python -m aegis.cli ir examples/valid/observation.aegis
 ```
 
-The default CLI reports project status. `tokenize` prints positioned tokens. `parse` prints the AST and syntax diagnostics. `check` performs semantic analysis and returns a nonzero status for errors. None of these commands performs IR generation, optimization, code generation, or VM execution.
+The default CLI reports project status. `tokenize` prints positioned tokens. `parse` prints the AST and syntax diagnostics. `check` performs semantic analysis. `ir` prints deterministic structured IR. None of these commands performs optimization, target-code generation, bytecode generation, or VM execution.
 
 ## Tests
 

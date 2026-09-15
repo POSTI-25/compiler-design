@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from aegis.ast import ast_to_dict
+from aegis.ir import IRGenerator, render_ir
 from aegis.lexer import Lexer
 from aegis.parser import Parser
 from aegis.semantic import SemanticAnalyzer
@@ -42,6 +43,11 @@ def main(argv: list[str] | None = None) -> int:
             print("Usage error: check requires a source file path.", file=sys.stderr)
             return 2
         return _check_file(args.source)
+    if args.command_or_source == "ir":
+        if args.source is None:
+            print("Usage error: ir requires a source file path.", file=sys.stderr)
+            return 2
+        return _ir_file(args.source)
 
     print("AEGIS Compiler")
     print("Status: Project foundation initialized")
@@ -112,6 +118,34 @@ def _check_file(source_path: Path) -> int:
     if not diagnostics:
         print("Semantic check passed.")
     return 1 if diagnostics else 0
+
+
+def _ir_file(source_path: Path) -> int:
+    try:
+        source = source_path.read_text(encoding="utf-8")
+    except OSError as error:
+        print(f"Could not read source file {source_path}: {error}", file=sys.stderr)
+        return 1
+
+    lexer = Lexer(source)
+    tokens = lexer.tokenize()
+    parser = Parser(tokens)
+    program = parser.parse()
+    if lexer.errors or parser.errors or program is None:
+        for error in lexer.errors:
+            print(error, file=sys.stderr)
+        for error in parser.errors:
+            print(error, file=sys.stderr)
+        return 1
+
+    semantic_diagnostics = SemanticAnalyzer().analyze(program)
+    if semantic_diagnostics:
+        for diagnostic in semantic_diagnostics:
+            print(diagnostic, file=sys.stderr)
+        return 1
+
+    print(render_ir(IRGenerator().generate(program)))
+    return 0
 
 
 if __name__ == "__main__":

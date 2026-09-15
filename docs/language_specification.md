@@ -145,7 +145,7 @@ MISSION observation {
 }
 ```
 
-This is accepted by the lexer and parser. Semantic validation and execution are not implemented yet.
+This is accepted by the lexer, parser, semantic analyzer, and IR generator. It is not executed.
 
 ## Invalid Examples
 
@@ -174,7 +174,7 @@ The first omits the opening brace. The second omits the statement semicolon. Sem
 
 ## Current Limitations
 
-The lexer, parser, and AST are implemented and tested. The parser does not perform semantic validation, declaration checking, range checking, command-sequence checking, or execution. Exact declarations, types, sensor reads, safe-mode restrictions, and runtime state transitions remain unspecified.
+The lexer, parser, AST, semantic analyzer, and structured IR are implemented and tested. IR is not optimized or executed. Exact declarations, type annotations, sensor reads, safe-mode restrictions, and runtime state transitions remain unspecified.
 
 ## Future Enhancements
 

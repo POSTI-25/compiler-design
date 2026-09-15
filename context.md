@@ -16,7 +16,7 @@ The system is an explainable educational prototype. It must not be presented as 
 
 ## 3. Current Status
 
-The project foundation, lexer, parser, AST, symbol table, and semantic analyzer are implemented and validated. The repository contains Python project metadata, a package skeleton, status/tokenize/parse/check CLI commands, positioned tokens, lexical/parser/semantic diagnostics, AST nodes, scoped symbols, documentation, valid and invalid examples, and focused tests. No compiler phase after semantic analysis has been implemented.
+The project foundation, lexer, parser, AST, symbol table, semantic analyzer, and structured IR are implemented and validated. The repository contains Python project metadata, a package skeleton, status/tokenize/parse/check/ir CLI commands, positioned tokens, lexical/parser/semantic diagnostics, AST nodes, scoped symbols, structured IR, documentation, valid and invalid examples, and focused tests. No optimization, target-code, bytecode, or VM phase has been implemented.
 
 ## 4. Approved Requirements
 
@@ -56,6 +56,24 @@ Resolved for lexical analysis: the PRD requires string and boolean token recogni
 Resolved for the parser milestone: the active grammar uses brace-delimited blocks only. `END` remains a lexer token for compatibility, but it is rejected as an unexpected token by the parser and is not an alternate block terminator.
 
 These questions do not block repository planning, but they must be resolved before the grammar and semantic contract are finalized.
+
+## Semantic Boundary Audit
+
+| Rule or concept | Classification | Current implementation |
+|---|---|---|
+| Numeric command arguments | Explicit PRD requirement | `POWER`, `MOVE`, and `WAIT` reject nonnumeric expressions |
+| `POWER` range 0 to 100 | Explicit PRD requirement | Constant values outside the range produce `SEM006` |
+| Nonnegative movement | Explicit PRD requirement | Constant negative `MOVE` values produce `SEM007` |
+| Nonnegative wait values | Conservative implementation choice | Constant negative `WAIT` values produce `SEM003`; exact wait semantics remain open |
+| Bounded repetition | Explicit PRD requirement | Integer counts are restricted to 0..1000; the cap is provisional |
+| Boolean conditions | Explicit PRD requirement | `IF` conditions must have boolean type |
+| Camera before capture | Explicit PRD requirement | Static camera fact tracking produces `SEM008` when capture is unsafe |
+| Image before transmission | Explicit PRD requirement | Static image fact tracking produces `SEM009` when transmission is unsafe |
+| `BATTERY`, `TEMPERATURE`, `VISIBILITY` | Conservative implementation choice | Predefined state symbols; exact sensor semantics are not finalized |
+| Branch/repetition fact merging | Conservative implementation choice | Facts are retained only when true on all reachable analyzed paths |
+| Advanced declarations, user types, runtime state | Future extension | No declaration syntax, execution, or full type system is implemented |
+
+The semantic analyzer is static validation only. It does not simulate spacecraft state and does not establish that these provisional state facts model runtime behavior.
 
 ## 6. Current Architecture
 
@@ -159,20 +177,20 @@ Empty directories will not be created ahead of the module that uses them.
 
 ## 9. Work In Progress
 
-- Reviewing semantic rules and symbol metadata before IR design.
+- Reviewing structured IR shape and its boundary with future optimization.
 - Resolving declaration/type syntax and runtime semantics that remain open in the PRD.
 
 ## 10. Pending Tasks
 
-- Review parser grammar and AST contracts before semantic analysis.
-- Define declaration/type syntax and domain validation rules for the semantic phase.
-- Add AST, symbol table, semantic rules, IR, optimizer, code generator, VM, CLI, examples, and integration tests incrementally.
+- Review IR node contracts before optimization design.
+- Define whether future lowering needs labels/basic blocks or remains structured.
+- Add optimizer, target-code generator, bytecode, VM, and integration tests incrementally.
 - Add optional visualization after text reports and core behavior are stable.
 
 ## 11. Known Issues
 
 - The PRD has several intentionally open language details, so a final grammar cannot yet be treated as approved.
-- IR generation, optimization, target code generation, and VM execution have not been implemented yet.
+- Optimization, target-code generation, bytecode generation, and VM execution have not been implemented yet.
 - The VM state-transition model and safe-mode restrictions are not yet specified precisely.
 
 ## 12. Design Decisions
@@ -227,11 +245,11 @@ py --version      -> Python 3.12.4
 
 Setup: `python -m pip install -e ".[test]"`
 
-Tests: `python -m pytest -q`
+Tests: `py -m pytest -q`
 
-CLI after editable installation: `aegis`, `python -m aegis.cli tokenize examples/valid/observation.aegis`, `python -m aegis.cli parse examples/valid/observation.aegis`, or `python -m aegis.cli check examples/valid/observation.aegis`
+CLI after editable installation: `aegis`, `python -m aegis.cli tokenize examples/valid/observation.aegis`, `python -m aegis.cli parse examples/valid/observation.aegis`, `python -m aegis.cli check examples/valid/observation.aegis`, or `python -m aegis.cli ir examples/valid/observation.aegis`
 
-The CLI reports foundation status, tokenizes source, prints the parser AST, or performs semantic checks. It does not perform IR generation, optimization, code generation, or VM execution.
+The CLI reports foundation status, tokenizes source, prints the parser AST, performs semantic checks, or prints structured IR. It does not perform optimization, code generation, bytecode generation, or VM execution.
 
 ## 16. Dependencies
 
@@ -251,8 +269,8 @@ The CLI reports foundation status, tokenizes source, prints the parser AST, or p
 | AST | Tested | `src/aegis/ast/` | 15 parser/AST tests passed | Dataclass nodes preserve structure and source locations |
 | Symbol table | Tested | `src/aegis/semantic/symbols.py` | 15 semantic tests passed | Mission/state symbols plus reusable nested scopes |
 | Semantic analysis | Tested | `src/aegis/semantic/analyzer.py` | 15 semantic tests passed | Conservative type, range, reference, and domain checks |
-| IR generation | Not started | None | None | Readable machine-independent representation |
-| Optimization | Not started | None | None | At least two independently testable passes |
+| IR generation | Tested | `src/aegis/ir/` | 14 IR tests passed | Structured, nested, source-located representation |
+| Optimization | Not started | None | None | At least two independently testable passes; IR is currently unoptimized |
 | Target code generation | Not started | None | None | One documented target format |
 | Mission VM | Not started | None | None | Simulated state and trace only |
 | Error recovery | Partially implemented | `src/aegis/lexer/`, `src/aegis/parser/`, `src/aegis/semantic/` | Lexical/parser recovery and multi-diagnostic semantic tests passed | Semantic analysis collects independent diagnostics; later recovery is not implemented |
@@ -277,6 +295,10 @@ The CLI reports foundation status, tokenizes source, prints the parser AST, or p
 - `src/aegis/semantic/analyzer.py`: AST semantic traversal and domain checks.
 - `tests/semantic/`: symbol, semantic-rule, diagnostic, API, and check CLI tests.
 - `examples/invalid/semantic_errors.aegis`: semantic diagnostics demonstration.
+- `src/aegis/ir/__init__.py`: public IR API.
+- `src/aegis/ir/nodes.py`: structured IR instruction and expression nodes plus deterministic rendering.
+- `src/aegis/ir/generator.py`: AST-to-IR generation and generation errors.
+- `tests/ir/`: IR structure, mapping, precedence, error blocking, determinism, and CLI tests.
 - `src/aegis/ast/`: source-located AST node definitions and inspection helper.
 - `src/aegis/parser/`: recursive-descent parser and syntax diagnostics.
 - `tests/ast/`, `tests/parser/`: AST, parser, recovery, expression, and parse CLI tests.
@@ -307,10 +329,14 @@ The CLI reports foundation status, tokenizes source, prints the parser AST, or p
 - 2026-09-15: Ran the complete suite after semantic integration: 45 tests passed; compileall and diff checks passed; `compiler_prd.md` remained unchanged.
 - 2026-09-15: Implemented scoped symbols and semantic analysis with diagnostic codes SEM001 through SEM009 where applicable.
 - 2026-09-15: Added semantic tests and check CLI tests; focused semantic suite passed with 15 tests.
+- 2026-09-15: Audited semantic boundaries; PRD-required checks were distinguished from provisional state symbols, repeat cap, wait restriction, and static fact merging.
+- 2026-09-15: Implemented `src/aegis/ir/nodes.py` and `src/aegis/ir/generator.py` with structured source-located IR and deterministic rendering.
+- 2026-09-15: Added `tests/ir/` and `python -m aegis.cli ir <source>`; focused IR suite passed with 14 tests.
+- 2026-09-15: Full validation after IR integration passed with 59 tests; compileall and diff checks passed; `compiler_prd.md` remained unchanged.
 
 ## 20. Next Recommended Action
 
-Review the symbol table and semantic rules, then implement IR generation. Keep optimization, target-code generation, and VM execution out of the IR milestone.
+Review the structured IR and semantic boundary, then implement optimization. Keep target-code generation, bytecode, and VM execution out of the optimization milestone.
 
 ## Initial Implementation Roadmap
 

@@ -1,6 +1,6 @@
 # AEGIS Architecture
 
-This document describes the planned architecture. The project foundation, lexer, parser, and AST currently exist; semantic analysis and later compiler phases remain planned.
+This document describes the planned architecture. The project foundation, lexer, parser, AST, semantic analysis, symbol table, and structured IR currently exist; optimization and later backend phases remain planned.
 
 ## Compiler Pipeline
 
@@ -64,10 +64,18 @@ Execution Trace and Diagnostics
 
 ## Current Foundation
 
-The current package contains the project metadata, package initialization, pipeline placeholder, status/tokenize/parse CLI, tested lexer, parser, and AST. No semantic analyzer, symbol table, IR, optimizer, code generator, VM, or visualization implementation is present yet.
+The current package contains the project metadata, package initialization, pipeline placeholder, status/tokenize/parse/check/ir CLI, tested lexer, parser, AST, semantic analyzer, symbol table, and structured IR. No optimizer, target-code generator, bytecode generator, VM, or visualization implementation is present yet.
 
 ## Implemented Semantic Slice
 
 The semantic layer contains a scoped `SymbolTable`, `Scope`, and `Symbol` model. The current grammar has no declarations, so analysis installs one mission symbol and predefined state symbols (`BATTERY`, `TEMPERATURE`, and `VISIBILITY`). Nested scopes are available for future declaration syntax but are not created by the current AST.
 
 `SemanticAnalyzer` traverses the AST and emits positioned `SemanticDiagnostic` instances. It checks expression types, numeric command arguments, constant ranges, boolean conditions, bounded repetition, undefined identifiers, and camera/image operation dependencies. It does not generate IR, optimize, generate target code, or execute a VM.
+
+## Intermediate Representation
+
+The IR is a structured, nested representation rather than lowered labels or basic blocks. `IRProgram` contains an `IRBlock`; blocks contain typed command/control-flow instructions; expressions become typed IR expression nodes. Each IR node preserves the AST source location.
+
+The AST-to-IR mapping is direct: mission and blocks map to `IRProgram` and `IRBlock`; commands map to corresponding `IRPower`, `IRMove`, `IRCamera`, `IRCaptureImage`, `IRTransmitImage`, `IRWait`, and `IRSafeMode` instructions; `IfStatement` and `RepeatStatement` map to nested `IRIf` and `IRRepeat` instructions; literals, identifiers, unary expressions, and binary expressions map to `IRLiteral`, `IRIdentifier`, `IRUnary`, and `IRBinary` nodes.
+
+IR rendering is deterministic and readable. It is an intermediate artifact only: no optimization, target-code generation, bytecode generation, VM execution, or runtime spacecraft simulation is performed.
