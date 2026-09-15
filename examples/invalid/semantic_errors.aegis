@@ -1,0 +1,9 @@
+MISSION faulty {
+    POWER 140;
+    MOVE -5;
+    CAPTURE IMAGE;
+    IF BATTERY + TRUE {
+        WAIT "soon";
+    }
+    TRANSMIT IMAGE;
+}

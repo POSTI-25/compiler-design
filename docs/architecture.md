@@ -41,7 +41,7 @@ Execution Trace and Diagnostics
 - **Parser:** Use the provisional handwritten recursive-descent strategy to validate syntax and construct the AST.
 - **AST:** Represent missions, blocks, commands, control flow, and expressions independently of grammar-only details, with source locations.
 - **Symbol table:** Store declarations, types, scopes, locations, and mutability metadata.
-- **Semantic analyzer:** Validate declarations, types, ranges, command sequencing, and mission-domain rules.
+- **Semantic analyzer:** Build mission/state symbols and validate conservative types, ranges, expression operands, conditions, repeat counts, and camera/image dependencies.
 - **IR generator:** Translate the AST into readable machine-independent instructions, temporaries, and labels.
 - **Optimizer:** Apply independently testable, semantics-preserving general and mission-specific transformations.
 - **Code generator:** Lower optimized IR into one documented AEGIS target instruction format.
@@ -65,3 +65,9 @@ Execution Trace and Diagnostics
 ## Current Foundation
 
 The current package contains the project metadata, package initialization, pipeline placeholder, status/tokenize/parse CLI, tested lexer, parser, and AST. No semantic analyzer, symbol table, IR, optimizer, code generator, VM, or visualization implementation is present yet.
+
+## Implemented Semantic Slice
+
+The semantic layer contains a scoped `SymbolTable`, `Scope`, and `Symbol` model. The current grammar has no declarations, so analysis installs one mission symbol and predefined state symbols (`BATTERY`, `TEMPERATURE`, and `VISIBILITY`). Nested scopes are available for future declaration syntax but are not created by the current AST.
+
+`SemanticAnalyzer` traverses the AST and emits positioned `SemanticDiagnostic` instances. It checks expression types, numeric command arguments, constant ranges, boolean conditions, bounded repetition, undefined identifiers, and camera/image operation dependencies. It does not generate IR, optimize, generate target code, or execute a VM.

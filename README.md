@@ -34,9 +34,11 @@ python -m aegis.cli examples/valid/observation.aegis
 python -m aegis.cli tokenize examples/valid/observation.aegis
 # parse a source file and print its AST
 python -m aegis.cli parse examples/valid/observation.aegis
+# run semantic checks
+python -m aegis.cli check examples/valid/observation.aegis
 ```
 
-The default CLI reports project status. `tokenize` prints positioned tokens. `parse` prints the AST and syntax diagnostics. Neither command performs semantic analysis or later compilation stages.
+The default CLI reports project status. `tokenize` prints positioned tokens. `parse` prints the AST and syntax diagnostics. `check` performs semantic analysis and returns a nonzero status for errors. None of these commands performs IR generation, optimization, code generation, or VM execution.
 
 ## Tests
 

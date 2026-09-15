@@ -10,6 +10,7 @@ from pathlib import Path
 from aegis.ast import ast_to_dict
 from aegis.lexer import Lexer
 from aegis.parser import Parser
+from aegis.semantic import SemanticAnalyzer
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -36,6 +37,11 @@ def main(argv: list[str] | None = None) -> int:
             print("Usage error: parse requires a source file path.", file=sys.stderr)
             return 2
         return _parse_file(args.source)
+    if args.command_or_source == "check":
+        if args.source is None:
+            print("Usage error: check requires a source file path.", file=sys.stderr)
+            return 2
+        return _check_file(args.source)
 
     print("AEGIS Compiler")
     print("Status: Project foundation initialized")
@@ -81,6 +87,31 @@ def _parse_file(source_path: Path) -> int:
     if program is not None:
         print(json.dumps(ast_to_dict(program), indent=2))
     return 1 if lexer.errors or parser.errors else 0
+
+
+def _check_file(source_path: Path) -> int:
+    try:
+        source = source_path.read_text(encoding="utf-8")
+    except OSError as error:
+        print(f"Could not read source file {source_path}: {error}", file=sys.stderr)
+        return 1
+
+    lexer = Lexer(source)
+    program = Parser(lexer.tokenize())
+    parsed_program = program.parse()
+    if lexer.errors or program.errors or parsed_program is None:
+        for error in lexer.errors:
+            print(error, file=sys.stderr)
+        for error in program.errors:
+            print(error, file=sys.stderr)
+        return 1
+
+    diagnostics = SemanticAnalyzer().analyze(parsed_program)
+    for diagnostic in diagnostics:
+        print(diagnostic, file=sys.stderr)
+    if not diagnostics:
+        print("Semantic check passed.")
+    return 1 if diagnostics else 0
 
 
 if __name__ == "__main__":

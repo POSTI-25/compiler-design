@@ -16,7 +16,7 @@ The system is an explainable educational prototype. It must not be presented as 
 
 ## 3. Current Status
 
-The project foundation, lexer, parser, and AST are implemented and validated. The repository contains Python project metadata, a package skeleton, status/tokenize/parse CLI commands, positioned tokens, lexical and parser diagnostics, AST nodes, documentation, one valid source example, and smoke/lexer/parser/AST tests. No compiler phase after syntax analysis has been implemented.
+The project foundation, lexer, parser, AST, symbol table, and semantic analyzer are implemented and validated. The repository contains Python project metadata, a package skeleton, status/tokenize/parse/check CLI commands, positioned tokens, lexical/parser/semantic diagnostics, AST nodes, scoped symbols, documentation, valid and invalid examples, and focused tests. No compiler phase after semantic analysis has been implemented.
 
 ## 4. Approved Requirements
 
@@ -152,10 +152,14 @@ Empty directories will not be created ahead of the module that uses them.
 - Implemented the brace-only recursive-descent parser and dataclass AST with source locations.
 - Added parser diagnostics and synchronization at semicolons, closing braces, statement starts, and EOF.
 - Added `parse` CLI support that prints the AST as JSON and returns nonzero for lexical or syntax errors.
+- Implemented `src/aegis/semantic/symbols.py` with `Symbol`, `Scope`, `SymbolTable`, symbol kinds, nested scopes, lookup, and duplicate detection.
+- Implemented `src/aegis/semantic/diagnostics.py` with stable semantic diagnostic codes and source locations.
+- Implemented `src/aegis/semantic/analyzer.py` with conservative expression typing, predefined state symbols, command/range checks, repeat checks, undefined identifiers, and camera/image sequencing checks.
+- Added `check` CLI support and `examples/invalid/semantic_errors.aegis`.
 
 ## 9. Work In Progress
 
-- Reviewing parser and AST behavior before semantic design.
+- Reviewing semantic rules and symbol metadata before IR design.
 - Resolving declaration/type syntax and runtime semantics that remain open in the PRD.
 
 ## 10. Pending Tasks
@@ -168,7 +172,7 @@ Empty directories will not be created ahead of the module that uses them.
 ## 11. Known Issues
 
 - The PRD has several intentionally open language details, so a final grammar cannot yet be treated as approved.
-- Semantic analysis and later compiler phases have not been implemented yet.
+- IR generation, optimization, target code generation, and VM execution have not been implemented yet.
 - The VM state-transition model and safe-mode restrictions are not yet specified precisely.
 
 ## 12. Design Decisions
@@ -206,6 +210,8 @@ Empty directories will not be created ahead of the module that uses them.
 - Lexer and foundation suite: passed, 15 tests.
 - Parser and AST focused suite: passed, 15 tests.
 - Complete project suite: passed, 30 tests.
+- Semantic and symbol-table suite: passed, 15 tests.
+- Complete project suite after semantic integration: passed, 45 tests.
 - Python syntax validation: `python -m compileall -q src tests` passed.
 - Repository validation: `git diff --check` passed and `compiler_prd.md` had no changes.
 - Planned coverage still includes semantic, IR, optimization, runtime, and integration tests.
@@ -221,11 +227,11 @@ py --version      -> Python 3.12.4
 
 Setup: `python -m pip install -e ".[test]"`
 
-Tests: `python -m pytest`
+Tests: `python -m pytest -q`
 
-CLI after editable installation: `aegis`, `python -m aegis.cli tokenize examples/valid/observation.aegis`, or `python -m aegis.cli parse examples/valid/observation.aegis`
+CLI after editable installation: `aegis`, `python -m aegis.cli tokenize examples/valid/observation.aegis`, `python -m aegis.cli parse examples/valid/observation.aegis`, or `python -m aegis.cli check examples/valid/observation.aegis`
 
-The CLI reports foundation status, tokenizes source, or prints the parser AST. It does not perform semantic analysis or later compilation stages.
+The CLI reports foundation status, tokenizes source, prints the parser AST, or performs semantic checks. It does not perform IR generation, optimization, code generation, or VM execution.
 
 ## 16. Dependencies
 
@@ -243,13 +249,13 @@ The CLI reports foundation status, tokenizes source, or prints the parser AST. I
 | Lexer | Tested | `src/aegis/lexer/` | 13 lexer tests passed | Handwritten lexer with recovery and positioned tokens |
 | Parser | Tested | `src/aegis/parser/` | 15 parser/AST tests passed | Handwritten recursive descent with brace-only grammar |
 | AST | Tested | `src/aegis/ast/` | 15 parser/AST tests passed | Dataclass nodes preserve structure and source locations |
-| Semantic analysis | Not started | None | None | Domain rules and type checks required |
-| Symbol table | Not started | None | None | Scope and declaration metadata required |
+| Symbol table | Tested | `src/aegis/semantic/symbols.py` | 15 semantic tests passed | Mission/state symbols plus reusable nested scopes |
+| Semantic analysis | Tested | `src/aegis/semantic/analyzer.py` | 15 semantic tests passed | Conservative type, range, reference, and domain checks |
 | IR generation | Not started | None | None | Readable machine-independent representation |
 | Optimization | Not started | None | None | At least two independently testable passes |
 | Target code generation | Not started | None | None | One documented target format |
 | Mission VM | Not started | None | None | Simulated state and trace only |
-| Error recovery | Partially implemented | `src/aegis/lexer/`, `src/aegis/parser/` | Lexer and parser recovery tests passed | Lexical and parser recovery only; semantic recovery is not implemented |
+| Error recovery | Partially implemented | `src/aegis/lexer/`, `src/aegis/parser/`, `src/aegis/semantic/` | Lexical/parser recovery and multi-diagnostic semantic tests passed | Semantic analysis collects independent diagnostics; later recovery is not implemented |
 | Visualization | Planned | None | None | Text reports first; richer output optional |
 
 ## 18. Important Files
@@ -265,6 +271,12 @@ The CLI reports foundation status, tokenizes source, or prints the parser AST. I
 - `src/aegis/ast/`: source-located AST node definitions and inspection helper.
 - `src/aegis/parser/`: recursive-descent parser and syntax diagnostics.
 - `tests/ast/`, `tests/parser/`: AST, parser, recovery, expression, and parse CLI tests.
+- `src/aegis/semantic/__init__.py`: public semantic API.
+- `src/aegis/semantic/symbols.py`: scoped symbols and symbol tables.
+- `src/aegis/semantic/diagnostics.py`: semantic diagnostic structure.
+- `src/aegis/semantic/analyzer.py`: AST semantic traversal and domain checks.
+- `tests/semantic/`: symbol, semantic-rule, diagnostic, API, and check CLI tests.
+- `examples/invalid/semantic_errors.aegis`: semantic diagnostics demonstration.
 - `src/aegis/ast/`: source-located AST node definitions and inspection helper.
 - `src/aegis/parser/`: recursive-descent parser and syntax diagnostics.
 - `tests/ast/`, `tests/parser/`: AST, parser, recovery, expression, and parse CLI tests.
@@ -289,10 +301,16 @@ The CLI reports foundation status, tokenizes source, or prints the parser AST. I
 - 2026-09-15: Added parser and AST tests; focused parser/AST suite passed with 15 tests.
 - 2026-09-15: Added `python -m aegis.cli parse <source>` and validated valid AST output and invalid syntax exit status.
 - 2026-09-15: Ran the complete project suite successfully: 30 tests passed; syntax and repository integrity checks also passed.
+- 2026-09-15: Implemented `src/aegis/semantic/symbols.py`, `src/aegis/semantic/diagnostics.py`, and `src/aegis/semantic/analyzer.py`.
+- 2026-09-15: Added `tests/semantic/` and `examples/invalid/semantic_errors.aegis`; semantic suite passed with 15 tests.
+- 2026-09-15: Added `python -m aegis.cli check <source>`; valid input exited 0 and invalid semantic input exited 1 with positioned diagnostics.
+- 2026-09-15: Ran the complete suite after semantic integration: 45 tests passed; compileall and diff checks passed; `compiler_prd.md` remained unchanged.
+- 2026-09-15: Implemented scoped symbols and semantic analysis with diagnostic codes SEM001 through SEM009 where applicable.
+- 2026-09-15: Added semantic tests and check CLI tests; focused semantic suite passed with 15 tests.
 
 ## 20. Next Recommended Action
 
-Review the parser and AST behavior, then implement the symbol table and semantic analysis. Keep IR, optimization, code generation, and VM work out of the semantic milestone.
+Review the symbol table and semantic rules, then implement IR generation. Keep optimization, target-code generation, and VM execution out of the IR milestone.
 
 ## Initial Implementation Roadmap
 

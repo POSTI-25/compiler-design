@@ -100,6 +100,25 @@ equality -> relational -> additive -> multiplicative -> unary -> primary
 
 Primary expressions include numbers, strings, booleans, identifiers, and parenthesized expressions. `END` is not part of this grammar; its lexer token is rejected by the parser.
 
+## Semantic Rules Currently Implemented
+
+The current semantic phase uses a small conservative type model: `integer`, `decimal`, `number`, `string`, `boolean`, and `unknown`. The grammar has no declaration syntax, so the analyzer does not invent variables or user-defined types. It provides these predefined numeric/boolean state identifiers: `BATTERY`, `TEMPERATURE`, and `VISIBILITY`.
+
+Implemented checks include:
+
+- Numeric arguments for `POWER`, `MOVE`, and `WAIT`.
+- `POWER` constants between `0` and `100`.
+- Nonnegative constant movement and wait values.
+- Integer `REPEAT` counts between `0` and `1000`.
+- Boolean `IF` conditions.
+- Numeric arithmetic and relational operands.
+- Compatible equality operands.
+- Undefined identifier references.
+- Camera-on requirement for `CAPTURE IMAGE`.
+- Captured-image requirement for `TRANSMIT IMAGE`.
+
+These checks are static analysis only. They do not execute commands or simulate spacecraft state.
+
 ## Literals and Conditions
 
 Numeric literals are required for command arguments and may include integers and decimals as supported by the eventual lexer. String literals are not needed by the currently selected command examples and are deferred unless a concrete initial command requires them.
