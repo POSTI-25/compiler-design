@@ -1,6 +1,6 @@
 # AEGIS Architecture
 
-This document describes the planned architecture. The project foundation and lexer currently exist; later compiler phases remain planned.
+This document describes the planned architecture. The project foundation, lexer, parser, and AST currently exist; semantic analysis and later compiler phases remain planned.
 
 ## Compiler Pipeline
 
@@ -39,7 +39,7 @@ Execution Trace and Diagnostics
 
 - **Lexer:** Convert source text into positioned tokens and report invalid characters or literals.
 - **Parser:** Use the provisional handwritten recursive-descent strategy to validate syntax and construct the AST.
-- **AST:** Represent the logical mission structure independently of grammar-only details.
+- **AST:** Represent missions, blocks, commands, control flow, and expressions independently of grammar-only details, with source locations.
 - **Symbol table:** Store declarations, types, scopes, locations, and mutability metadata.
 - **Semantic analyzer:** Validate declarations, types, ranges, command sequencing, and mission-domain rules.
 - **IR generator:** Translate the AST into readable machine-independent instructions, temporaries, and labels.
@@ -64,4 +64,4 @@ Execution Trace and Diagnostics
 
 ## Current Foundation
 
-The current package contains the project metadata, package initialization, pipeline placeholder, status/tokenize CLI, and tested lexer. No parser, AST, semantic analyzer, IR, optimizer, code generator, VM, or visualization implementation is present yet.
+The current package contains the project metadata, package initialization, pipeline placeholder, status/tokenize/parse CLI, tested lexer, parser, and AST. No semantic analyzer, symbol table, IR, optimizer, code generator, VM, or visualization implementation is present yet.

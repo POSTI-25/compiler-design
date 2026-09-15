@@ -16,7 +16,7 @@ The system is an explainable educational prototype. It must not be presented as 
 
 ## 3. Current Status
 
-The project foundation and lexer are implemented and validated. The repository now contains Python project metadata, a package skeleton, a status/tokenize CLI, positioned token definitions, lexical diagnostics, documentation, one valid source example, and smoke/lexer tests. No compiler phase after lexical analysis has been implemented.
+The project foundation, lexer, parser, and AST are implemented and validated. The repository contains Python project metadata, a package skeleton, status/tokenize/parse CLI commands, positioned tokens, lexical and parser diagnostics, AST nodes, documentation, one valid source example, and smoke/lexer/parser/AST tests. No compiler phase after syntax analysis has been implemented.
 
 ## 4. Approved Requirements
 
@@ -52,6 +52,8 @@ Explicit exclusions include hardware drivers, real telemetry or networking, upli
 - Which visualization outputs are required for the final demonstration versus optional text reports.
 
 Resolved for lexical analysis: the PRD requires string and boolean token recognition, while the provisional language specification deferred their use in commands. The lexer will recognize `TRUE`/`FALSE` and quoted strings without assigning them parser or semantic meaning yet.
+
+Resolved for the parser milestone: the active grammar uses brace-delimited blocks only. `END` remains a lexer token for compatibility, but it is rejected as an unexpected token by the parser and is not an alternate block terminator.
 
 These questions do not block repository planning, but they must be resolved before the grammar and semantic contract are finalized.
 
@@ -99,6 +101,10 @@ tests/test_smoke.py
 examples/valid/observation.aegis
 docs/architecture.md
 docs/language_specification.md
+src/aegis/ast/
+src/aegis/parser/
+tests/ast/
+tests/parser/
 ```
 
 Planned structure, to be created incrementally:
@@ -143,24 +149,26 @@ Empty directories will not be created ahead of the module that uses them.
 - Added focused lexer tests covering token order, keywords, identifiers, literals, symbols, comments, positions, errors, EOF, and CLI behavior.
 - Added `tokenize` CLI support for valid and invalid `.aegis` files.
 - Updated README and architecture/language documents to reflect the lexer milestone.
+- Implemented the brace-only recursive-descent parser and dataclass AST with source locations.
+- Added parser diagnostics and synchronization at semicolons, closing braces, statement starts, and EOF.
+- Added `parse` CLI support that prints the AST as JSON and returns nonzero for lexical or syntax errors.
 
 ## 9. Work In Progress
 
-- Reviewing the lexer contract before parser design.
+- Reviewing parser and AST behavior before semantic design.
 - Resolving declaration/type syntax and runtime semantics that remain open in the PRD.
 
 ## 10. Pending Tasks
 
-- Finalize declaration/type syntax and expression details before implementing the parser.
-- Review lexer token and source-location contracts for parser integration.
-- Define the first grammar slice and parser recovery rules.
+- Review parser grammar and AST contracts before semantic analysis.
+- Define declaration/type syntax and domain validation rules for the semantic phase.
 - Add AST, symbol table, semantic rules, IR, optimizer, code generator, VM, CLI, examples, and integration tests incrementally.
 - Add optional visualization after text reports and core behavior are stable.
 
 ## 11. Known Issues
 
 - The PRD has several intentionally open language details, so a final grammar cannot yet be treated as approved.
-- Parser and later compiler phases have not been implemented yet.
+- Semantic analysis and later compiler phases have not been implemented yet.
 - The VM state-transition model and safe-mode restrictions are not yet specified precisely.
 
 ## 12. Design Decisions
@@ -176,6 +184,9 @@ Empty directories will not be created ahead of the module that uses them.
 - The CLI accepts an optional source path but only reports that processing is not implemented; it does not emit fake compiler artifacts.
 - The lexer will ignore whitespace and `//` line comments, track newlines for positions, and emit no newline tokens because the language specification treats whitespace as insignificant.
 - The lexer will recover from lexical errors by recording them, consuming the invalid sequence where possible, and continuing to emit later tokens plus exactly one EOF token.
+- The parser grammar is `MISSION identifier block`, where a block is brace-delimited and contains commands or nested `IF`/`ELSE` and `REPEAT` statements.
+- Parser expressions use precedence levels: equality, relational, additive, multiplicative, unary, and primary. No assignment or implicit semantic validation is performed.
+- Parser recovery synchronizes at semicolons, closing braces, statement-starting keywords, and EOF; parser errors are collected without attempting semantic recovery.
 - The first vertical slice should cover source input, tokens, a minimal mission/command AST, diagnostics, and tests before control flow or optimization.
 
 ## 13. Assumptions
@@ -192,7 +203,12 @@ Empty directories will not be created ahead of the module that uses them.
 - Foundation smoke suite: passed, 2 tests.
 - Validation command: `C:/Users/JAHNAVI SINGH/AppData/Local/Programs/Python/Python312/python.exe -m pytest`.
 - The `pytest` shell command was not initially available on `PATH`; pytest was installed into the configured interpreter and the module invocation passed.
-- No compiler-phase tests exist yet. Planned coverage includes unit tests for each compiler phase and integration tests for valid, faulty, conditional, repetition, and optimization-focused missions.
+- Lexer and foundation suite: passed, 15 tests.
+- Parser and AST focused suite: passed, 15 tests.
+- Complete project suite: passed, 30 tests.
+- Python syntax validation: `python -m compileall -q src tests` passed.
+- Repository validation: `git diff --check` passed and `compiler_prd.md` had no changes.
+- Planned coverage still includes semantic, IR, optimization, runtime, and integration tests.
 
 ## 15. Commands
 
@@ -207,9 +223,9 @@ Setup: `python -m pip install -e ".[test]"`
 
 Tests: `python -m pytest`
 
-CLI after editable installation: `aegis` or `python -m aegis.cli examples/valid/observation.aegis`
+CLI after editable installation: `aegis`, `python -m aegis.cli tokenize examples/valid/observation.aegis`, or `python -m aegis.cli parse examples/valid/observation.aegis`
 
-The CLI currently reports foundation status only and does not compile source files.
+The CLI reports foundation status, tokenizes source, or prints the parser AST. It does not perform semantic analysis or later compilation stages.
 
 ## 16. Dependencies
 
@@ -225,15 +241,15 @@ The CLI currently reports foundation status only and does not compile source fil
 | Project foundation | Implemented | `pyproject.toml`, `README.md`, package skeleton | 2 smoke tests passed | Foundation only; no compiler phase implemented |
 | Source input | Implemented | `src/aegis/cli.py` | Smoke-tested | CLI can read a source file for tokenization |
 | Lexer | Tested | `src/aegis/lexer/` | 13 lexer tests passed | Handwritten lexer with recovery and positioned tokens |
-| Parser | Not started | None | None | Handwritten recursive descent selected provisionally |
-| AST | Not started | None | None | Must preserve logical structure and locations |
+| Parser | Tested | `src/aegis/parser/` | 15 parser/AST tests passed | Handwritten recursive descent with brace-only grammar |
+| AST | Tested | `src/aegis/ast/` | 15 parser/AST tests passed | Dataclass nodes preserve structure and source locations |
 | Semantic analysis | Not started | None | None | Domain rules and type checks required |
 | Symbol table | Not started | None | None | Scope and declaration metadata required |
 | IR generation | Not started | None | None | Readable machine-independent representation |
 | Optimization | Not started | None | None | At least two independently testable passes |
 | Target code generation | Not started | None | None | One documented target format |
 | Mission VM | Not started | None | None | Simulated state and trace only |
-| Error recovery | Partially implemented | `src/aegis/lexer/` | Covered by lexer error tests | Lexer records errors and continues; later phase recovery is not implemented |
+| Error recovery | Partially implemented | `src/aegis/lexer/`, `src/aegis/parser/` | Lexer and parser recovery tests passed | Lexical and parser recovery only; semantic recovery is not implemented |
 | Visualization | Planned | None | None | Text reports first; richer output optional |
 
 ## 18. Important Files
@@ -246,6 +262,12 @@ The CLI currently reports foundation status only and does not compile source fil
 - `docs/language_specification.md`: provisional initial language subset and syntax decisions.
 - `src/aegis/lexer/`: positioned token definitions, lexical diagnostics, and handwritten lexer.
 - `tests/lexer/`: focused lexical and tokenize CLI tests.
+- `src/aegis/ast/`: source-located AST node definitions and inspection helper.
+- `src/aegis/parser/`: recursive-descent parser and syntax diagnostics.
+- `tests/ast/`, `tests/parser/`: AST, parser, recovery, expression, and parse CLI tests.
+- `src/aegis/ast/`: source-located AST node definitions and inspection helper.
+- `src/aegis/parser/`: recursive-descent parser and syntax diagnostics.
+- `tests/ast/`, `tests/parser/`: AST, parser, recovery, expression, and parse CLI tests.
 
 ## 19. Agent Activity Log
 
@@ -261,10 +283,16 @@ The CLI currently reports foundation status only and does not compile source fil
 - 2026-09-15: Implemented `src/aegis/lexer/` with positioned tokens, comments, literals, operators, lexical diagnostics, recovery, and EOF handling.
 - 2026-09-15: Added lexer tests and validated 13 lexer tests successfully.
 - 2026-09-15: Added `python -m aegis.cli tokenize <source>` and validated valid and invalid lexical CLI behavior.
+- 2026-09-15: Selected brace-only parser blocks; `END` remains lexically recognized but is rejected by the active parser grammar.
+- 2026-09-15: Defined the parser grammar, AST node categories, expression precedence, and synchronization strategy before implementation.
+- 2026-09-15: Implemented `src/aegis/ast/` and `src/aegis/parser/` with source-located nodes, recursive descent, precedence, diagnostics, and recovery.
+- 2026-09-15: Added parser and AST tests; focused parser/AST suite passed with 15 tests.
+- 2026-09-15: Added `python -m aegis.cli parse <source>` and validated valid AST output and invalid syntax exit status.
+- 2026-09-15: Ran the complete project suite successfully: 30 tests passed; syntax and repository integrity checks also passed.
 
 ## 20. Next Recommended Action
 
-Review the tested lexer and its token contract, then implement the parser. Keep AST, semantic analysis, IR, optimization, code generation, and VM work out of the parser milestone.
+Review the parser and AST behavior, then implement the symbol table and semantic analysis. Keep IR, optimization, code generation, and VM work out of the semantic milestone.
 
 ## Initial Implementation Roadmap
 

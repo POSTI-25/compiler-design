@@ -23,7 +23,7 @@ The first language slice includes:
 - Boolean conditions for control flow.
 - Comments and whitespace.
 
-The command and control-flow syntax will be implemented incrementally. Lexical analysis now recognizes the token forms described here, but no parser or later compiler phase exists yet.
+The command and control-flow syntax is implemented incrementally. The lexer and the initial parser now recognize the active syntax described here; semantic analysis and later compiler phases do not exist yet.
 
 ## Mission Declaration
 
@@ -72,6 +72,34 @@ REPEAT 3 {
 
 The exact sensor/state expression syntax, declaration syntax, and repetition bound are still open. No `END`-based form will be supported in the initial syntax unless this decision is revisited explicitly.
 
+## Active Grammar
+
+The parser currently implements this grammar shape:
+
+```text
+program       := MISSION IDENTIFIER block EOF
+block         := "{" statement* "}"
+statement     := power | move | camera | capture | transmit | wait
+               | safe_mode | if_statement | repeat_statement
+power         := POWER expression ";"
+move          := MOVE expression ";"
+camera        := CAMERA (ON | OFF) ";"
+capture       := CAPTURE IMAGE ";"
+transmit      := TRANSMIT IMAGE ";"
+wait          := WAIT expression ";"
+safe_mode     := SAFE_MODE ";"
+if_statement  := IF expression block (ELSE block)?
+repeat_statement := REPEAT expression block
+```
+
+Expressions use the following precedence, from lowest to highest:
+
+```text
+equality -> relational -> additive -> multiplicative -> unary -> primary
+```
+
+Primary expressions include numbers, strings, booleans, identifiers, and parenthesized expressions. `END` is not part of this grammar; its lexer token is rejected by the parser.
+
 ## Literals and Conditions
 
 Numeric literals are required for command arguments and may include integers and decimals as supported by the eventual lexer. String literals are not needed by the currently selected command examples and are deferred unless a concrete initial command requires them.
@@ -98,7 +126,7 @@ MISSION observation {
 }
 ```
 
-This is a future compiler input example only; the compiler pipeline is not implemented yet.
+This is accepted by the lexer and parser. Semantic validation and execution are not implemented yet.
 
 ## Invalid Examples
 
@@ -127,7 +155,7 @@ The first omits the opening brace. The second omits the statement semicolon. Sem
 
 ## Current Limitations
 
-The lexer is implemented and tested. The parser, AST, semantic analyzer, symbol table, IR, optimizer, code generator, and VM have not been implemented. Exact declarations, types, sensor reads, safe-mode restrictions, and runtime state transitions remain unspecified.
+The lexer, parser, and AST are implemented and tested. The parser does not perform semantic validation, declaration checking, range checking, command-sequence checking, or execution. Exact declarations, types, sensor reads, safe-mode restrictions, and runtime state transitions remain unspecified.
 
 ## Future Enhancements
 
