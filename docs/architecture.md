@@ -1,6 +1,6 @@
 # AEGIS Architecture
 
-This document describes the planned architecture. Only the project foundation and status CLI currently exist.
+This document describes the planned architecture. The project foundation and lexer currently exist; later compiler phases remain planned.
 
 ## Compiler Pipeline
 
@@ -64,4 +64,4 @@ Execution Trace and Diagnostics
 
 ## Current Foundation
 
-The current package contains only the project metadata, package initialization, pipeline placeholder, and status CLI. No lexer, parser, AST, semantic analyzer, IR, optimizer, code generator, VM, or visualization implementation is present yet.
+The current package contains the project metadata, package initialization, pipeline placeholder, status/tokenize CLI, and tested lexer. No parser, AST, semantic analyzer, IR, optimizer, code generator, VM, or visualization implementation is present yet.

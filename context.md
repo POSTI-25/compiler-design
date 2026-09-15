@@ -16,7 +16,7 @@ The system is an explainable educational prototype. It must not be presented as 
 
 ## 3. Current Status
 
-The project foundation is implemented and validated. The repository now contains Python project metadata, a package skeleton, a status-only CLI, documentation, one valid source example, and smoke tests. No compiler phase has been implemented yet.
+The project foundation and lexer are implemented and validated. The repository now contains Python project metadata, a package skeleton, a status/tokenize CLI, positioned token definitions, lexical diagnostics, documentation, one valid source example, and smoke/lexer tests. No compiler phase after lexical analysis has been implemented.
 
 ## 4. Approved Requirements
 
@@ -50,6 +50,8 @@ Explicit exclusions include hardware drivers, real telemetry or networking, upli
 - Safe-mode restrictions and the precise battery/energy update rules in the simulator.
 - The initial bounded maximum for `REPEAT`.
 - Which visualization outputs are required for the final demonstration versus optional text reports.
+
+Resolved for lexical analysis: the PRD requires string and boolean token recognition, while the provisional language specification deferred their use in commands. The lexer will recognize `TRUE`/`FALSE` and quoted strings without assigning them parser or semantic meaning yet.
 
 These questions do not block repository planning, but they must be resolved before the grammar and semantic contract are finalized.
 
@@ -137,17 +139,20 @@ Empty directories will not be created ahead of the module that uses them.
 - Selected brace-based blocks provisionally and excluded mixed `END` syntax from the initial style.
 - Created the Python project foundation, package metadata, status CLI, documentation, example, and smoke tests.
 - Installed pytest into the configured Python 3.12.4 environment for validation.
+- Implemented a handwritten lexer with keywords, identifiers, numeric/string/boolean lexemes, operators, punctuation, comments, positions, recoverable errors, and exactly one EOF token.
+- Added focused lexer tests covering token order, keywords, identifiers, literals, symbols, comments, positions, errors, EOF, and CLI behavior.
+- Added `tokenize` CLI support for valid and invalid `.aegis` files.
+- Updated README and architecture/language documents to reflect the lexer milestone.
 
 ## 9. Work In Progress
 
-- Defining the exact token contract and grammar details needed before lexer implementation.
+- Reviewing the lexer contract before parser design.
 - Resolving declaration/type syntax and runtime semantics that remain open in the PRD.
 
 ## 10. Pending Tasks
 
-- Finalize declaration/type syntax and expression details before implementing the lexer.
-- Define tokens and source-location/diagnostic contracts.
-- Implement and test the lexer.
+- Finalize declaration/type syntax and expression details before implementing the parser.
+- Review lexer token and source-location contracts for parser integration.
 - Define the first grammar slice and parser recovery rules.
 - Add AST, symbol table, semantic rules, IR, optimizer, code generator, VM, CLI, examples, and integration tests incrementally.
 - Add optional visualization after text reports and core behavior are stable.
@@ -155,7 +160,7 @@ Empty directories will not be created ahead of the module that uses them.
 ## 11. Known Issues
 
 - The PRD has several intentionally open language details, so a final grammar cannot yet be treated as approved.
-- There is no implementation or automated test suite yet.
+- Parser and later compiler phases have not been implemented yet.
 - The VM state-transition model and safe-mode restrictions are not yet specified precisely.
 
 ## 12. Design Decisions
@@ -169,6 +174,8 @@ Empty directories will not be created ahead of the module that uses them.
 - The initial language subset is limited to mission declarations, the PRD command set, planned `IF`/`ELSE`/`REPEAT` control flow, numeric literals, boolean conditions, comments, braces, and semicolons.
 - The project uses a `src` package layout, `pyproject.toml`, and pytest for development testing.
 - The CLI accepts an optional source path but only reports that processing is not implemented; it does not emit fake compiler artifacts.
+- The lexer will ignore whitespace and `//` line comments, track newlines for positions, and emit no newline tokens because the language specification treats whitespace as insignificant.
+- The lexer will recover from lexical errors by recording them, consuming the invalid sequence where possible, and continuing to emit later tokens plus exactly one EOF token.
 - The first vertical slice should cover source input, tokens, a minimal mission/command AST, diagnostics, and tests before control flow or optimization.
 
 ## 13. Assumptions
@@ -216,8 +223,8 @@ The CLI currently reports foundation status only and does not compile source fil
 | Stage | Status | Files | Tests | Notes |
 |---|---|---|---|---|
 | Project foundation | Implemented | `pyproject.toml`, `README.md`, package skeleton | 2 smoke tests passed | Foundation only; no compiler phase implemented |
-| Source input | Planned | `src/aegis/cli.py` | Smoke-tested only | CLI detects an optional path but does not process it |
-| Lexer | Not started | None | None | Token positions and lexical diagnostics required |
+| Source input | Implemented | `src/aegis/cli.py` | Smoke-tested | CLI can read a source file for tokenization |
+| Lexer | Tested | `src/aegis/lexer/` | 13 lexer tests passed | Handwritten lexer with recovery and positioned tokens |
 | Parser | Not started | None | None | Handwritten recursive descent selected provisionally |
 | AST | Not started | None | None | Must preserve logical structure and locations |
 | Semantic analysis | Not started | None | None | Domain rules and type checks required |
@@ -226,7 +233,7 @@ The CLI currently reports foundation status only and does not compile source fil
 | Optimization | Not started | None | None | At least two independently testable passes |
 | Target code generation | Not started | None | None | One documented target format |
 | Mission VM | Not started | None | None | Simulated state and trace only |
-| Error recovery | Planned | None | None | Recover at safe statement/block boundaries |
+| Error recovery | Partially implemented | `src/aegis/lexer/` | Covered by lexer error tests | Lexer records errors and continues; later phase recovery is not implemented |
 | Visualization | Planned | None | None | Text reports first; richer output optional |
 
 ## 18. Important Files
@@ -237,6 +244,8 @@ The CLI currently reports foundation status only and does not compile source fil
 - `pyproject.toml`: package metadata, editable-install configuration, CLI entry point, and pytest configuration.
 - `docs/architecture.md`: planned pipeline and module responsibilities.
 - `docs/language_specification.md`: provisional initial language subset and syntax decisions.
+- `src/aegis/lexer/`: positioned token definitions, lexical diagnostics, and handwritten lexer.
+- `tests/lexer/`: focused lexical and tokenize CLI tests.
 
 ## 19. Agent Activity Log
 
@@ -248,10 +257,14 @@ The CLI currently reports foundation status only and does not compile source fil
 - 2026-09-15: Created `README.md`, `pyproject.toml`, `src/aegis/__init__.py`, `src/aegis/cli.py`, `src/aegis/pipeline/__init__.py`, `tests/__init__.py`, `tests/test_smoke.py`, `examples/valid/observation.aegis`, `docs/architecture.md`, and `docs/language_specification.md`.
 - 2026-09-15: Ran the foundation smoke suite successfully: 2 tests passed.
 - 2026-09-15: Unresolved questions remain around declaration/type syntax, expressions, and VM semantics. The next task is lexer implementation after those contracts are reviewed.
+- 2026-09-15: Resolved the PRD/specification tension by recognizing strings and booleans lexically while deferring their parser and semantic use.
+- 2026-09-15: Implemented `src/aegis/lexer/` with positioned tokens, comments, literals, operators, lexical diagnostics, recovery, and EOF handling.
+- 2026-09-15: Added lexer tests and validated 13 lexer tests successfully.
+- 2026-09-15: Added `python -m aegis.cli tokenize <source>` and validated valid and invalid lexical CLI behavior.
 
 ## 20. Next Recommended Action
 
-Review the provisional language and token decisions, then implement and test the lexer only. Do not begin parser, semantic, IR, optimization, or VM work until the lexer contract is stable.
+Review the tested lexer and its token contract, then implement the parser. Keep AST, semantic analysis, IR, optimization, code generation, and VM work out of the parser milestone.
 
 ## Initial Implementation Roadmap
 

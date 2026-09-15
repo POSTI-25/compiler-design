@@ -23,7 +23,7 @@ The first language slice includes:
 - Boolean conditions for control flow.
 - Comments and whitespace.
 
-The command and control-flow syntax will be implemented incrementally. At this foundation stage, this document defines the intended subset but no lexer or parser exists yet.
+The command and control-flow syntax will be implemented incrementally. Lexical analysis now recognizes the token forms described here, but no parser or later compiler phase exists yet.
 
 ## Mission Declaration
 
@@ -127,7 +127,7 @@ The first omits the opening brace. The second omits the statement semicolon. Sem
 
 ## Current Limitations
 
-No lexer, parser, AST, semantic analyzer, symbol table, IR, optimizer, code generator, or VM has been implemented. Exact declarations, types, sensor reads, safe-mode restrictions, and runtime state transitions remain unspecified.
+The lexer is implemented and tested. The parser, AST, semantic analyzer, symbol table, IR, optimizer, code generator, and VM have not been implemented. Exact declarations, types, sensor reads, safe-mode restrictions, and runtime state transitions remain unspecified.
 
 ## Future Enhancements
 
