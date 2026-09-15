@@ -1,0 +1,7 @@
+MISSION observation {
+    POWER 80;
+    CAMERA ON;
+    CAPTURE IMAGE;
+    CAMERA OFF;
+    TRANSMIT IMAGE;
+}

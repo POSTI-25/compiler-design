@@ -16,7 +16,7 @@ The system is an explainable educational prototype. It must not be presented as 
 
 ## 3. Current Status
 
-Initialization analysis complete. The repository contains only the authoritative PRD, `compiler_prd.md`, and the newly created project context. No compiler implementation, configuration, examples, tests, or dependencies have been added yet.
+The project foundation is implemented and validated. The repository now contains Python project metadata, a package skeleton, a status-only CLI, documentation, one valid source example, and smoke tests. No compiler phase has been implemented yet.
 
 ## 4. Approved Requirements
 
@@ -42,7 +42,6 @@ Explicit exclusions include hardware drivers, real telemetry or networking, upli
 
 ## 5. Requirements Still Requiring Clarification
 
-- Whether the parser will use ANTLR4 or a handwritten recursive-descent implementation.
 - Exact declaration and type-annotation syntax; the PRD lists possible types but does not define their grammar.
 - Exact semantics and syntax of sensor/state reads such as `BATTERY` and `TEMPERATURE`.
 - Whether `END` is a standalone block terminator, whether braces are also required, or whether both forms are accepted.
@@ -88,6 +87,16 @@ Current structure:
 ```text
 compiler_prd.md
 context.md
+README.md
+pyproject.toml
+src/aegis/__init__.py
+src/aegis/cli.py
+src/aegis/pipeline/__init__.py
+tests/__init__.py
+tests/test_smoke.py
+examples/valid/observation.aegis
+docs/architecture.md
+docs/language_specification.md
 ```
 
 Planned structure, to be created incrementally:
@@ -121,21 +130,22 @@ Empty directories will not be created ahead of the module that uses them.
 
 ## 8. Completed Work
 
-- Audited the workspace: only `compiler_prd.md` existed; no source, tests, configuration, dependency files, examples, or documentation beyond the PRD were present.
-- Confirmed the workspace is a Git repository on branch `main` with no reported changes before initialization.
-- Read the complete PRD.
-- Created this initial project context.
+- Audited the workspace before changes: only `compiler_prd.md` and the historical `context.md` were present; no compiler source, tests, configuration, dependencies, or examples existed.
+- Confirmed the Git repository is on branch `main`.
+- Read the complete PRD and preserved the existing context history.
+- Selected handwritten recursive-descent parsing provisionally instead of ANTLR4.
+- Selected brace-based blocks provisionally and excluded mixed `END` syntax from the initial style.
+- Created the Python project foundation, package metadata, status CLI, documentation, example, and smoke tests.
+- Installed pytest into the configured Python 3.12.4 environment for validation.
 
 ## 9. Work In Progress
 
-- Translating the PRD into a precise language specification.
-- Selecting and documenting the parser strategy.
-- Defining the smallest vertical slice for the first implementation milestone.
+- Defining the exact token contract and grammar details needed before lexer implementation.
+- Resolving declaration/type syntax and runtime semantics that remain open in the PRD.
 
 ## 10. Pending Tasks
 
-- Confirm parser strategy and declaration/type syntax.
-- Create project metadata and setup documentation.
+- Finalize declaration/type syntax and expression details before implementing the lexer.
 - Define tokens and source-location/diagnostic contracts.
 - Implement and test the lexer.
 - Define the first grammar slice and parser recovery rules.
@@ -154,7 +164,11 @@ Empty directories will not be created ahead of the module that uses them.
 - Python 3 is the implementation language; the available runtime is Python 3.12.4.
 - A custom, readable IR and custom Mission VM are preferred for educational transparency.
 - Text-based artifact reporting will precede optional Graphviz or other visualization.
-- The provisional parser direction is handwritten recursive descent because it minimizes setup and keeps grammar/recovery behavior visible; this is a proposal, not an approved irreversible decision.
+- Handwritten recursive-descent parsing is selected provisionally because the language is small and the implementation is easier to explain and control than ANTLR4 for the first version.
+- Braces are the provisional block delimiters for the initial language style; `END` will not be mixed with braces.
+- The initial language subset is limited to mission declarations, the PRD command set, planned `IF`/`ELSE`/`REPEAT` control flow, numeric literals, boolean conditions, comments, braces, and semicolons.
+- The project uses a `src` package layout, `pyproject.toml`, and pytest for development testing.
+- The CLI accepts an optional source path but only reports that processing is not implemented; it does not emit fake compiler artifacts.
 - The first vertical slice should cover source input, tokens, a minimal mission/command AST, diagnostics, and tests before control flow or optimization.
 
 ## 13. Assumptions
@@ -168,7 +182,10 @@ Empty directories will not be created ahead of the module that uses them.
 
 ## 14. Testing Status
 
-No tests exist yet and no test command has been run. Planned coverage includes unit tests for each compiler phase and integration tests for valid, faulty, conditional, repetition, and optimization-focused missions.
+- Foundation smoke suite: passed, 2 tests.
+- Validation command: `C:/Users/JAHNAVI SINGH/AppData/Local/Programs/Python/Python312/python.exe -m pytest`.
+- The `pytest` shell command was not initially available on `PATH`; pytest was installed into the configured interpreter and the module invocation passed.
+- No compiler-phase tests exist yet. Planned coverage includes unit tests for each compiler phase and integration tests for valid, faulty, conditional, repetition, and optimization-focused missions.
 
 ## 15. Commands
 
@@ -179,19 +196,29 @@ python --version  -> Python 3.12.4
 py --version      -> Python 3.12.4
 ```
 
-No project setup, build, test, or execution command exists yet. The first setup milestone must define these commands in `README.md` and project metadata.
+Setup: `python -m pip install -e ".[test]"`
+
+Tests: `python -m pytest`
+
+CLI after editable installation: `aegis` or `python -m aegis.cli examples/valid/observation.aegis`
+
+The CLI currently reports foundation status only and does not compile source files.
 
 ## 16. Dependencies
 
-No project dependencies are currently declared or installed. Candidate development dependencies are `pytest` and, only if selected, ANTLR4 tooling or Graphviz support. The core design should remain usable without optional visualization dependencies.
+- Runtime dependencies: none.
+- Development/test dependency: `pytest>=8.0` in the optional `test` dependency group.
+- ANTLR4 and Graphviz are not configured.
+- The core design should remain usable without optional visualization dependencies.
 
 ## 17. Compiler Pipeline Status
 
 | Stage | Status | Files | Tests | Notes |
 |---|---|---|---|---|
-| Source input | Planned | None | None | File input and source-string API required |
+| Project foundation | Implemented | `pyproject.toml`, `README.md`, package skeleton | 2 smoke tests passed | Foundation only; no compiler phase implemented |
+| Source input | Planned | `src/aegis/cli.py` | Smoke-tested only | CLI detects an optional path but does not process it |
 | Lexer | Not started | None | None | Token positions and lexical diagnostics required |
-| Parser | Not started | None | None | Parser strategy remains open |
+| Parser | Not started | None | None | Handwritten recursive descent selected provisionally |
 | AST | Not started | None | None | Must preserve logical structure and locations |
 | Semantic analysis | Not started | None | None | Domain rules and type checks required |
 | Symbol table | Not started | None | None | Scope and declaration metadata required |
@@ -206,6 +233,10 @@ No project dependencies are currently declared or installed. Candidate developme
 
 - `compiler_prd.md`: authoritative product requirements document.
 - `context.md`: maintained project memory, status, decisions, assumptions, and activity log.
+- `README.md`: setup, status, usage, tests, and scope boundary.
+- `pyproject.toml`: package metadata, editable-install configuration, CLI entry point, and pytest configuration.
+- `docs/architecture.md`: planned pipeline and module responsibilities.
+- `docs/language_specification.md`: provisional initial language subset and syntax decisions.
 
 ## 19. Agent Activity Log
 
@@ -213,10 +244,14 @@ No project dependencies are currently declared or installed. Candidate developme
 - 2026-09-15: Confirmed Git branch `main` and Python 3.12.4 availability.
 - 2026-09-15: Read the complete PRD and recorded explicit requirements, exclusions, ambiguities, architecture, and roadmap direction.
 - 2026-09-15: Created the initial `context.md`; no compiler implementation was started.
+- 2026-09-15: Re-read the PRD and context, checked the repository and Git status, and confirmed no compiler phase was present.
+- 2026-09-15: Created `README.md`, `pyproject.toml`, `src/aegis/__init__.py`, `src/aegis/cli.py`, `src/aegis/pipeline/__init__.py`, `tests/__init__.py`, `tests/test_smoke.py`, `examples/valid/observation.aegis`, `docs/architecture.md`, and `docs/language_specification.md`.
+- 2026-09-15: Ran the foundation smoke suite successfully: 2 tests passed.
+- 2026-09-15: Unresolved questions remain around declaration/type syntax, expressions, and VM semantics. The next task is lexer implementation after those contracts are reviewed.
 
 ## 20. Next Recommended Action
 
-Resolve the parser and grammar questions, then create the project foundation (`README.md`, `pyproject.toml`, package skeleton, and test configuration) followed by a tested lexer slice. Do not begin semantic, IR, optimization, or VM work until the language subset and token contract are stable.
+Review the provisional language and token decisions, then implement and test the lexer only. Do not begin parser, semantic, IR, optimization, or VM work until the lexer contract is stable.
 
 ## Initial Implementation Roadmap
 
