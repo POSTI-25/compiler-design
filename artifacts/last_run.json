@@ -1,0 +1,53 @@
+{
+  "source_file": "examples\\invalid\\semantic_errors.aegis",
+  "overall_status": "failure",
+  "stages": {
+    "source_loading": {
+      "status": "success",
+      "summary": "loaded 137 characters"
+    },
+    "lexical_analysis": {
+      "status": "success",
+      "summary": "27 tokens produced"
+    },
+    "parsing": {
+      "status": "success",
+      "summary": "source accepted by grammar"
+    },
+    "ast_generation": {
+      "status": "success",
+      "summary": "6 statements"
+    },
+    "semantic_analysis": {
+      "status": "failure",
+      "summary": "semantic errors found",
+      "errors": [
+        "[SEMANTIC SEM006] at line 2, column 11: POWER value must be between 0 and 100.",
+        "[SEMANTIC SEM007] at line 3, column 5: MOVE distance must be nonnegative.",
+        "[SEMANTIC SEM008] at line 4, column 5: Cannot capture IMAGE while the camera is off.",
+        "[SEMANTIC SEM003] at line 5, column 16: Arithmetic operators require numeric operands.",
+        "[SEMANTIC SEM003] at line 6, column 9: WAIT argument must be numeric.",
+        "[SEMANTIC SEM009] at line 8, column 5: Cannot transmit IMAGE because no image has been captured."
+      ]
+    },
+    "ir_generation": {
+      "status": "not_run",
+      "summary": "not reached"
+    },
+    "runtime_execution": {
+      "status": "not_run",
+      "summary": "not reached"
+    },
+    "final_runtime_state": {
+      "status": "not_run",
+      "summary": "not reached"
+    }
+  },
+  "token_count": 27,
+  "ast_statement_count": 6,
+  "ir_instruction_count": null,
+  "executed_instruction_count": 0,
+  "state_mutation_count": 0,
+  "execution_events": [],
+  "final_runtime_state": null
+}

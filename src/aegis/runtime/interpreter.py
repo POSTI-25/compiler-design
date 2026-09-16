@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from aegis.ir import (
     IRBinary,
     IRBlock,
@@ -28,8 +30,13 @@ from .state import RuntimeState
 class Interpreter:
     """Execute supported structured IR instructions against simulated state."""
 
-    def __init__(self, state: RuntimeState | None = None) -> None:
+    def __init__(
+        self,
+        state: RuntimeState | None = None,
+        event_callback: Callable[[object, dict, dict, bool, str | None], None] | None = None,
+    ) -> None:
         self.state = state or RuntimeState()
+        self.event_callback = event_callback
 
     def run(self, program: IRProgram) -> RuntimeState:
         self._trace(f"MISSION {program.name}")
@@ -39,26 +46,46 @@ class Interpreter:
 
     def _execute_block(self, block: IRBlock) -> None:
         for instruction in block.instructions:
-            if isinstance(instruction, IRPower):
-                self._execute_power(instruction)
-            elif isinstance(instruction, IRMove):
-                self._execute_move(instruction)
-            elif isinstance(instruction, IRCamera):
-                self._execute_camera(instruction)
-            elif isinstance(instruction, IRCaptureImage):
-                self._execute_capture(instruction)
-            elif isinstance(instruction, IRTransmitImage):
-                self._execute_transmit(instruction)
-            elif isinstance(instruction, IRWait):
-                self._execute_wait(instruction)
-            elif isinstance(instruction, IRSafeMode):
-                self._execute_safe_mode(instruction)
-            elif isinstance(instruction, IRIf):
-                self._execute_if(instruction)
-            elif isinstance(instruction, IRRepeat):
-                self._execute_repeat(instruction)
-            else:
-                raise RuntimeError(f"Unsupported runtime instruction: {type(instruction).__name__}")
+            before = self._state_snapshot()
+            success = False
+            error_message = None
+            try:
+                self._execute_instruction(instruction)
+                success = True
+            except RuntimeError as error:
+                error_message = str(error)
+                raise
+            finally:
+                if self.event_callback is not None:
+                    self.event_callback(
+                        instruction,
+                        before,
+                        self._state_snapshot(),
+                        success,
+                        error_message,
+                    )
+
+    def _execute_instruction(self, instruction: object) -> None:
+        if isinstance(instruction, IRPower):
+            self._execute_power(instruction)
+        elif isinstance(instruction, IRMove):
+            self._execute_move(instruction)
+        elif isinstance(instruction, IRCamera):
+            self._execute_camera(instruction)
+        elif isinstance(instruction, IRCaptureImage):
+            self._execute_capture(instruction)
+        elif isinstance(instruction, IRTransmitImage):
+            self._execute_transmit(instruction)
+        elif isinstance(instruction, IRWait):
+            self._execute_wait(instruction)
+        elif isinstance(instruction, IRSafeMode):
+            self._execute_safe_mode(instruction)
+        elif isinstance(instruction, IRIf):
+            self._execute_if(instruction)
+        elif isinstance(instruction, IRRepeat):
+            self._execute_repeat(instruction)
+        else:
+            raise RuntimeError(f"Unsupported runtime instruction: {type(instruction).__name__}")
 
     def _execute_power(self, instruction: IRPower) -> None:
         value = self._number(self._evaluate(instruction.value), "POWER value")
@@ -184,3 +211,13 @@ class Interpreter:
 
     def _trace(self, message: str) -> None:
         self.state.trace.append(message)
+
+    def _state_snapshot(self) -> dict[str, int | float | bool]:
+        return {
+            "battery": self.state.battery,
+            "position": self.state.position,
+            "elapsed_time": self.state.elapsed_time,
+            "camera_on": self.state.camera_on,
+            "image_captured": self.state.image_captured,
+            "safe_mode": self.state.safe_mode,
+        }
