@@ -1,7 +1,7 @@
-MISSION observation {
-    POWER 80;
+MISSION mars_scan {
+    POWER 60;
     CAMERA ON;
     CAPTURE IMAGE;
-    CAMERA OFF;
     TRANSMIT IMAGE;
+    CAMERA OFF;
 }
