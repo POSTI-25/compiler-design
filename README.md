@@ -2,9 +2,9 @@
 
 AEGIS is an academic domain-specific language and compiler project for expressing high-level autonomous spacecraft mission logic. It is designed for Compiler Design (BCSE307P) at Vellore Institute of Technology, Vellore.
 
-## Current Status
+## MVP
 
-The project foundation, lexer, parser, AST, semantic analysis, symbol table, and structured IR are implemented. Optimization, target-code generation, bytecode generation, and the Mission VM are not implemented yet.
+The bare-minimum MVP accepts an AEGIS mission file, tokenizes it, parses it into an AST, performs semantic checks, generates structured IR, and interprets that IR with a deterministic simulated runtime. It reports diagnostics, execution traces, and final runtime state.
 
 ## Planned Pipeline
 
@@ -38,19 +38,52 @@ python -m aegis.cli parse examples/valid/observation.aegis
 python -m aegis.cli check examples/valid/observation.aegis
 # generate structured IR
 python -m aegis.cli ir examples/valid/observation.aegis
+# execute the complete MVP
+python -m aegis.cli run examples/valid/observation.aegis
 ```
 
-The default CLI reports project status. `tokenize` prints positioned tokens. `parse` prints the AST and syntax diagnostics. `check` performs semantic analysis. `ir` prints deterministic structured IR. None of these commands performs optimization, target-code generation, bytecode generation, or VM execution.
+## Demonstration Workflow
+
+Run the complete MVP from the project root:
+
+```powershell
+python -m pip install -e ".[test]"
+python -m aegis.cli tokenize examples/valid/observation.aegis
+python -m aegis.cli parse examples/valid/observation.aegis
+python -m aegis.cli check examples/valid/observation.aegis
+python -m aegis.cli ir examples/valid/observation.aegis
+python -m aegis.cli run examples/valid/observation.aegis
+```
+
+The final command prints the execution trace and final runtime state. To demonstrate semantic failure:
+
+```powershell
+python -m aegis.cli run examples/invalid/semantic_errors.aegis
+```
+
+## Example
+
+```aegis
+MISSION observation {
+       POWER 80;
+       CAMERA ON;
+       CAPTURE IMAGE;
+       CAMERA OFF;
+       TRANSMIT IMAGE;
+}
+```
 
 ## Tests
 
 ```powershell
-pytest
+py -m pytest -q
 ```
+
+Final validation result: `69 passed`.
 
 ## Limitations
 
-AEGIS is a simulated, educational compiler project. It will not control real spacecraft, hardware, telemetry, networks, or flight systems. Detailed physics, real-time behavior, and production safety certification are outside the project scope.
+AEGIS is a simulated, educational compiler project. It intentionally excludes optimization, target-code generation, bytecode, advanced VM architecture, scheduling, solar/eclipse simulation, thermal simulation, telemetry, fault injection, networking, databases, dashboards, real spacecraft control, hardware, and production flight software.
 
 ## Project Documents
 
