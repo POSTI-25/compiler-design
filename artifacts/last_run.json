@@ -1,14 +1,14 @@
 {
-  "source_file": "examples\\valid\\observation.aegis",
-  "overall_status": "success",
+  "source_file": "examples\\invalid\\semantic_errors.aegis",
+  "overall_status": "failure",
   "stages": {
     "source_loading": {
       "status": "success",
-      "summary": "loaded 105 characters"
+      "summary": "loaded 137 characters"
     },
     "lexical_analysis": {
       "status": "success",
-      "summary": "20 tokens produced"
+      "summary": "27 tokens produced"
     },
     "parsing": {
       "status": "success",
@@ -16,158 +16,38 @@
     },
     "ast_generation": {
       "status": "success",
-      "summary": "5 statements"
+      "summary": "6 statements"
     },
     "semantic_analysis": {
-      "status": "success",
-      "summary": "no semantic errors"
+      "status": "failure",
+      "summary": "semantic errors found",
+      "errors": [
+        "[SEMANTIC SEM006] at line 2, column 11: POWER value must be between 0 and 100.",
+        "[SEMANTIC SEM007] at line 3, column 5: MOVE distance must be nonnegative.",
+        "[SEMANTIC SEM008] at line 4, column 5: Cannot capture IMAGE while the camera is off.",
+        "[SEMANTIC SEM003] at line 5, column 16: Arithmetic operators require numeric operands.",
+        "[SEMANTIC SEM003] at line 6, column 9: WAIT argument must be numeric.",
+        "[SEMANTIC SEM009] at line 8, column 5: Cannot transmit IMAGE because no image has been captured."
+      ]
     },
     "ir_generation": {
-      "status": "success",
-      "summary": "5 instructions"
+      "status": "not_run",
+      "summary": "not reached"
     },
     "runtime_execution": {
-      "status": "success",
-      "summary": "5 instructions executed"
+      "status": "not_run",
+      "summary": "not reached"
     },
     "final_runtime_state": {
-      "status": "success",
-      "summary": "runtime state captured"
+      "status": "not_run",
+      "summary": "not reached"
     }
   },
-  "token_count": 20,
-  "ast_statement_count": 5,
-  "ir_instruction_count": 5,
-  "executed_instruction_count": 5,
-  "state_mutation_count": 5,
-  "execution_events": [
-    {
-      "instruction": "POWER 60",
-      "instruction_type": "IRPower",
-      "state_before": {
-        "battery": 100,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": false,
-        "image_captured": false,
-        "safe_mode": false
-      },
-      "state_after": {
-        "battery": 60,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": false,
-        "image_captured": false,
-        "safe_mode": false
-      },
-      "state_changed": true,
-      "battery_before": 100,
-      "battery_after": 60,
-      "success": true
-    },
-    {
-      "instruction": "CAMERA ON",
-      "instruction_type": "IRCamera",
-      "state_before": {
-        "battery": 60,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": false,
-        "image_captured": false,
-        "safe_mode": false
-      },
-      "state_after": {
-        "battery": 60,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": true,
-        "image_captured": false,
-        "safe_mode": false
-      },
-      "state_changed": true,
-      "battery_before": 60,
-      "battery_after": 60,
-      "success": true
-    },
-    {
-      "instruction": "CAPTURE IMAGE",
-      "instruction_type": "IRCaptureImage",
-      "state_before": {
-        "battery": 60,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": true,
-        "image_captured": false,
-        "safe_mode": false
-      },
-      "state_after": {
-        "battery": 60,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": true,
-        "image_captured": true,
-        "safe_mode": false
-      },
-      "state_changed": true,
-      "battery_before": 60,
-      "battery_after": 60,
-      "success": true
-    },
-    {
-      "instruction": "TRANSMIT IMAGE",
-      "instruction_type": "IRTransmitImage",
-      "state_before": {
-        "battery": 60,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": true,
-        "image_captured": true,
-        "safe_mode": false
-      },
-      "state_after": {
-        "battery": 60,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": true,
-        "image_captured": false,
-        "safe_mode": false
-      },
-      "state_changed": true,
-      "battery_before": 60,
-      "battery_after": 60,
-      "success": true
-    },
-    {
-      "instruction": "CAMERA OFF",
-      "instruction_type": "IRCamera",
-      "state_before": {
-        "battery": 60,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": true,
-        "image_captured": false,
-        "safe_mode": false
-      },
-      "state_after": {
-        "battery": 60,
-        "position": 0,
-        "elapsed_time": 0,
-        "camera_on": false,
-        "image_captured": false,
-        "safe_mode": false
-      },
-      "state_changed": true,
-      "battery_before": 60,
-      "battery_after": 60,
-      "success": true
-    }
-  ],
-  "final_runtime_state": {
-    "battery": 60,
-    "position": 0,
-    "elapsed_time": 0,
-    "camera_on": false,
-    "image_captured": false,
-    "safe_mode": false
-  }
+  "token_count": 27,
+  "ast_statement_count": 6,
+  "ir_instruction_count": null,
+  "executed_instruction_count": 0,
+  "state_mutation_count": 0,
+  "execution_events": [],
+  "final_runtime_state": null
 }
